@@ -5,11 +5,157 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run15()
+        mine.run14()
     }
 }
 
 class Mine {
+    
+    public func run14() {
+        let input: [String] = day14.components(separatedBy: "\n")
+        
+        var grid:[[Int]:String] = .init()
+
+        // tracks the bounding edges of the grid
+        var minX: Int = Int.max
+        var maxX: Int = 0
+        var maxY: Int = 0
+        
+        for line: String in input {
+            let stringChunks: [String] = line.components(separatedBy: " -> ")
+            var coordinates = [(Int,Int)]()
+            for chunk in stringChunks {
+                let rawCoords = chunk.components(separatedBy: ",")
+                let xCoord = Int(rawCoords[0]) ?? 0
+                let yCoord = Int(rawCoords[1]) ?? 0
+                coordinates.append((xCoord, yCoord))
+                maxY = max(yCoord, maxY)
+                maxX = max(xCoord, maxX)
+                minX = min(xCoord, minX)
+            }
+            for i in 0..<(coordinates.count - 1) {
+                for x in min(coordinates[i].0,coordinates[i+1].0)...max(coordinates[i].0,coordinates[i+1].0) {
+                    for y in min(coordinates[i].1,coordinates[i+1].1)...max(coordinates[i].1,coordinates[i+1].1){
+                        let key: [Int] = [x,y]
+                        if grid[key] == nil {
+                            grid[key] = "#"
+                        }
+                    }
+                }
+            }
+        }
+        let grainStart = (500,0)
+        var abyssFound = false
+        var grains = 0
+        while (!abyssFound){
+            var grainPosition = grainStart
+            var blocked = false
+            while (!blocked){
+                if grid[[grainPosition.0,grainPosition.1+1]] == nil {
+                    grainPosition.1 = grainPosition.1 + 1
+                } else if (grid[[grainPosition.0,grainPosition.1+1]] == "#") {
+                    if ((grid[[grainPosition.0-1,grainPosition.1+1]] != "#") &&
+                        (grid[[grainPosition.0-1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 - 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else if ((grid[[grainPosition.0+1,grainPosition.1+1]] != "#") &&
+                               (grid[[grainPosition.0+1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 + 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else {
+                        grid[[grainPosition.0,grainPosition.1]] = "o"
+                        blocked = true
+                        grains = grains + 1
+                    }
+                } else if (grid[[grainPosition.0,grainPosition.1+1]] == "o") {
+                    if ((grid[[grainPosition.0-1,grainPosition.1+1]] != "#") &&
+                        (grid[[grainPosition.0-1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 - 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else if ((grid[[grainPosition.0+1,grainPosition.1+1]] != "#") &&
+                               (grid[[grainPosition.0+1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 + 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else {
+                        grid[[grainPosition.0,grainPosition.1]] = "o"
+                        blocked = true
+                        grains = grains + 1
+                    }
+                }
+                if (grainPosition.1 == maxY){
+                    blocked = true
+                    abyssFound = true
+                }
+            }
+        }
+        print(grains)
+        
+        abyssFound = false
+        let floor = maxY + 2
+        while (!abyssFound){
+            var grainPosition = grainStart
+            var blocked = false
+            while (!blocked){
+                if grainPosition.1 + 1 == floor {
+                    grid[[grainPosition.0,grainPosition.1]] = "o"
+                    blocked = true
+                    grains = grains + 1
+                } else if grid[[grainPosition.0,grainPosition.1+1]] == nil {
+                    grainPosition.1 = grainPosition.1 + 1
+                } else if (grid[[grainPosition.0,grainPosition.1+1]] == "#") {
+                    if ((grid[[grainPosition.0-1,grainPosition.1+1]] != "#") &&
+                        (grid[[grainPosition.0-1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 - 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else if ((grid[[grainPosition.0+1,grainPosition.1+1]] != "#") &&
+                               (grid[[grainPosition.0+1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 + 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else {
+                        grid[[grainPosition.0,grainPosition.1]] = "o"
+                        blocked = true
+                        grains = grains + 1
+                    }
+                } else if (grid[[grainPosition.0,grainPosition.1+1]] == "o") {
+                    if ((grid[[grainPosition.0-1,grainPosition.1+1]] != "#") &&
+                        (grid[[grainPosition.0-1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 - 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else if ((grid[[grainPosition.0+1,grainPosition.1+1]] != "#") &&
+                               (grid[[grainPosition.0+1,grainPosition.1+1]] != "o")) {
+                        grainPosition.0 = grainPosition.0 + 1
+                        grainPosition.1 = grainPosition.1 + 1
+                    } else {
+                        grid[[grainPosition.0,grainPosition.1]] = "o"
+                        blocked = true
+                        grains = grains + 1
+                    }
+                }
+                if (grainPosition.1 == 0){
+                    blocked = true
+                    abyssFound = true
+                }
+                minX = min(minX,grainPosition.0)
+                maxX = max(maxX,grainPosition.0)
+            }
+        }
+        print(grains)
+        
+//        // print the grid
+//        for y: Int in 0...maxY+3 {
+//            var line: String = ""
+//            for x: Int in minX-2..<maxX+3 {
+//                let key: [Int] = [x,y]
+//                if grid[key] == nil {
+//                    line += "."
+//                } else {
+//                    line += grid[key]!
+//                }
+//            }
+//            print(line)
+//        }
+    }
+    
     public func run15() {
         let input: [String] = day15.components(separatedBy: "\n")
         
@@ -121,7 +267,7 @@ class Mine {
         print("Done")
     }
     
-    public func run14() {
+    public func run14Andy() {
         let input: [String] = day14.components(separatedBy: "\n")
         
         var grid:[[Int]:String] = .init()
