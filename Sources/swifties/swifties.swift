@@ -5,11 +5,104 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run14()
+        mine.run13()
     }
 }
 
 class Mine {
+    
+    public func run13(){
+        let rawString = day13
+        let inputString = rawString.components(separatedBy: "\n")
+        var input: [Packet] = inputString.compactMap { try? JSONDecoder().decode(Packet.self, from: $0.data(using: .utf8)!) }
+        var part1Result = 0
+        for i in stride(from: 0, to: input.count, by: 2) {
+            if (input[i] < input[i + 1]) {
+                part1Result = part1Result + i/2 + 1
+            }
+        }
+        print(part1Result)
+        
+        let newPacket1: Packet = .list([.list([.num(2)])])
+        let newPacket2: Packet = .list([.list([.num(6)])])
+        input.append(newPacket1)
+        input.append(newPacket2)
+        input = input.sorted(by: <)
+        let part2Result = (Int(input.firstIndex(of: newPacket1) ?? 0) + 1) * (Int(input.firstIndex(of: newPacket2) ?? 0) + 1)
+        print(part2Result)
+    }
+    
+    public enum Packet: Comparable, Decodable {
+        case num(Int), list([Packet])
+        
+        public init(from decoder: Decoder) throws {
+            do {
+                let c = try decoder.singleValueContainer()
+                self = .num(try c.decode(Int.self))
+            } catch {
+                self = .list(try [Packet](from: decoder))
+            }
+        }
+        
+        public static func < (lhs: Self, rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case (.num(let lValue), .num(let rValue)): return lValue < rValue
+            case (.list(_), .num(_)): return lhs < .list([rhs])
+            case (.num(_), .list(_)): return .list([lhs]) < rhs
+            case (.list(let lValue), .list(let rValue)):
+                for (l, r) in zip(lValue, rValue) {
+                    if (l < r) {
+                        return true
+                    } else if (l > r) {
+                        return false
+                    }
+                }
+                return lValue.count < rValue.count
+            }
+        }
+    }
+    
+    func comparator<T,S>(first: T, second: S) -> Int {
+        if (first is Int && second is Int){
+            let firstInt = first as! Int
+            let secondInt = second as! Int
+            if (firstInt < secondInt) {
+                return 1
+            } else if (firstInt == secondInt) {
+                return 0
+            } else {
+                return -1
+            }
+        } else if (first is [Int] && second is [Int]){
+            let firstIntArray = first as! [Int]
+            let secondIntArray = second as! [Int]
+            if (firstIntArray.count == 0 && secondIntArray.count == 0) {
+                return 0
+            } else {
+                let maxCount = max(firstIntArray.count, secondIntArray.count)
+                for i in 0..<maxCount {
+                    if i > firstIntArray.count - 1 {
+                        return 1
+                    } else if i > secondIntArray.count - 1 {
+                        return -1
+                    }else {
+                        if (firstIntArray[i]  < secondIntArray[i]) {
+                            return 1
+                        } else if (firstIntArray[i] > secondIntArray[i]) {
+                            return -1
+                        }
+                    }
+                }
+            }
+        } else if (first is Int) {
+            let newArray: [Int] = [first as! Int]
+            return comparator(first: newArray, second: second)
+        } else {
+            let newArray: [Int] = [second as! Int]
+            return comparator(first: first, second: newArray)
+        }
+        return 0
+    }
     
     public func run14() {
         let input: [String] = day14.components(separatedBy: "\n")
