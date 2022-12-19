@@ -5,11 +5,152 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run16()
+        mine.run17()
     }
 }
 
 class Mine {
+    
+    func getStartingHeight(chamber: [[Int]:String]) -> Int {
+        var startingHeight = 4
+        for entry in chamber {
+            if (entry.key[1] + 4) > startingHeight {
+                startingHeight = entry.key[1] + 4
+            }
+        }
+        return startingHeight
+    }
+    public func run17() {
+        let input = day17
+        let printChamber = false
+        var pieces = [[(Int,Int)]]()
+        let piece1 = [(0,0), (1,0), (2,0), (3,0)]
+        pieces.append(piece1)
+        let piece2 = [(1,0), (0,1), (1,1), (2,1), (1,2)]
+        pieces.append(piece2)
+        let piece3 = [(0,0), (1,0), (2,0), (2,1), (2,2)]
+        pieces.append(piece3)
+        let piece4 = [(0,0), (0,1), (0,2), (0,3)]
+        pieces.append(piece4)
+        let piece5 = [(0,0), (0,1), (1,0), (1,1)]
+        pieces.append(piece5)
+        
+        var chamber = [[Bool]]()
+
+        let floor = 1
+        var pieceIndex = 0
+        var inputIndex = 0
+        let maxPieces = 1_000_000_000_000
+        let rightWall = 7
+        var cumulativeHeight = 0
+        var maxHeight = 0
+        var tetrisRowIndices = [Int]()
+        var loopedAmount = 0
+        var tetrisIndices = [[Int]]()
+        var mIndices = [Int]()
+        var m = 1
+        while m  <= maxPieces {
+            let currentPiece = pieces[pieceIndex]
+            let startingHeight = maxHeight + 4
+            var currentHeight = startingHeight
+            var currentShift = 2
+            var collision = false
+            let maxy = currentPiece.max { $0.1 < $1.1 }!.1
+            for _ in (chamber.count - 1) ... max(maxy + currentHeight, chamber.count - 1) {
+                chamber.append(Array(repeating: false, count: 7))
+            }
+            while !collision {
+                for block in currentPiece {
+                    if (block.1 + currentHeight) < floor{
+                        collision = true
+                    } else {
+                        if chamber[block.1 + currentHeight][block.0 + currentShift] {
+                            collision = true
+                        }
+                    }
+                }
+                if (collision) {
+                    var rowsToCheck = [Int]()
+                    for block in currentPiece {
+                        chamber[block.1 + currentHeight + 1][block.0 + currentShift] = true
+                        rowsToCheck.append(block.1 + currentHeight + 1)
+                        maxHeight = max(maxHeight, block.1 + currentHeight + 1)
+                    }
+                   
+                        let row = maxHeight-1 //rowsToCheck[r]
+                        var filled = true
+                        var space = 0
+                        while filled && space < chamber[row].count {
+                            if !chamber[row][space] {
+                                filled = false
+                            }
+                            space = space + 1
+                        }
+                        if (filled) {
+                            let currentPair = [inputIndex,pieceIndex]
+                            if(tetrisIndices.contains(currentPair)) {
+                                let firstIndex = tetrisIndices.firstIndex(of: currentPair) ?? 0
+                                let cycleSize = m - (mIndices[firstIndex])
+                                print(cycleSize)
+                                let maxDiff = row - tetrisRowIndices[firstIndex]
+                                print(mIndices[firstIndex])
+                                print(m)
+                                let numCycles = (maxPieces - (mIndices[firstIndex] + 1)) / cycleSize
+                                print(numCycles)
+                                cumulativeHeight = (maxDiff) * (numCycles-1)
+                                m = m  + cycleSize * (numCycles - 1)
+                                tetrisIndices.removeAll()
+                                tetrisRowIndices.removeAll()
+                                mIndices.removeAll()
+                            } else {
+                                tetrisIndices.append(currentPair)
+                                tetrisRowIndices.append(row)
+                                mIndices.append(m)
+                            }
+                        }
+                } else {
+                    let direction = input[inputIndex]
+                    if (direction == "<") {
+                        var shouldShift = true
+                        for block in currentPiece {
+                            if (block.0 + currentShift - 1) < 0 {
+                                shouldShift = false
+                            } else {
+                                if (chamber[block.1 + currentHeight][block.0 + currentShift - 1]) {
+                                    shouldShift = false
+                                }
+                            }
+                        }
+                        if (shouldShift) {
+                            currentShift = currentShift - 1
+                        }
+                    } else if (direction == ">") {
+                        var shouldShift = true
+                        for block in currentPiece {
+                            if (block.0 + currentShift + 1) >= rightWall {
+                                shouldShift = false
+                            } else {
+                                if chamber[block.1 + currentHeight][block.0 + currentShift + 1] {
+                                    shouldShift = false
+                                }
+                            }
+                        }
+                        if (shouldShift) {
+                            currentShift = currentShift + 1
+                        }
+                    }
+                    
+                    currentHeight = currentHeight - 1
+                    inputIndex = (inputIndex + 1) % input.count
+                }
+            }
+            m = m + 1
+            pieceIndex = (pieceIndex + 1) % pieces.count
+        }
+        print( maxHeight + cumulativeHeight - loopedAmount)
+    }
+    
+    
     
     struct Valve {
         let flow: Int
@@ -28,7 +169,6 @@ class Mine {
         let lines = day16.components(separatedBy: "\n")
         var fullValveList = [String]()
         var unopenedList = [String]()
-        var openedList = [String]()
         var connectionList = [[String]]()
         var valvesWithFlow = [String]()
         var fullRateList = [Int]()
