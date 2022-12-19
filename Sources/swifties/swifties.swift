@@ -5,11 +5,118 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run13()
+        mine.run16()
     }
 }
 
 class Mine {
+    
+    struct Valve {
+        let flow: Int
+    }
+    
+    struct Path: Hashable {
+        let from: String
+        let to: String
+    }
+    
+    typealias Destination = (valve: String, time: Int)
+
+    typealias Paths = [String: [Destination]]
+    
+    public func run16() {
+        let lines = day16.components(separatedBy: "\n")
+        var fullValveList = [String]()
+        var unopenedList = [String]()
+        var openedList = [String]()
+        var connectionList = [[String]]()
+        var valvesWithFlow = [String]()
+        var fullRateList = [Int]()
+        var valveListWithFlow = [String: Valve]()
+        
+        let removeCharacters: Set<Character> = [",", ";"]
+        for line in lines {
+            let chunks = line.components(separatedBy: " ")
+            let currentValve = chunks[1]
+            fullValveList.append(currentValve)
+            var connections = [String]()
+            for c in 9..<chunks.count {
+                var connection = chunks[c]
+                connection.removeAll(where: { removeCharacters.contains($0) } )
+                connections.append(connection)
+            }
+            connectionList.append(connections)
+            var flowChunk = chunks[4]
+            flowChunk.removeAll(where: { removeCharacters.contains($0) } )
+            flowChunk = flowChunk.replacingOccurrences(of: "rate=", with: "")
+            let flowRate = Int(flowChunk) ?? 0
+            fullRateList.append(flowRate)
+            if (flowRate > 0 || currentValve == "AA") {
+                valveListWithFlow[currentValve] = Valve(flow: flowRate)
+                unopenedList.append(currentValve)
+                valvesWithFlow.append(currentValve)
+            }
+        }
+        var valveGraph: WeightedGraph<String, Int> = WeightedGraph<String, Int>(vertices: fullValveList)
+        for v in 0..<fullValveList.count {
+            for connection in connectionList[v] {
+                if (Int(fullValveList.firstIndex(of: connection) ?? 0) > v) {
+                    valveGraph.addEdge(from: fullValveList[v], to: connection, weight: 1)
+                }
+            }
+        }
+        
+        // Create combos of paths
+        var paths = Paths()
+        for start in valvesWithFlow {
+            let (_, pathDict) = valveGraph.dijkstra(root: start, startDistance: 0)
+            for destination in valvesWithFlow {
+                if start != destination {
+                    let valvePath: [WeightedEdge<Int>] = pathDictToPath(from: valveGraph.indexOfVertex(start)!, to: valveGraph.indexOfVertex(destination)!, pathDict: pathDict)
+                    var stops: [String] = valveGraph.edgesToVertices(edges: valvePath)
+                    let path = Path(from: start, to: destination)
+                    if paths[path.from] == nil {
+                        paths[path.from] = [Destination]()
+                    }
+                    paths[path.from]!.append((valve: path.to, time: stops.count - 1))
+                }
+            }
+        }
+        var open = Set<String>()
+        var result = findMaxPressurePt1(valveListWithFlow, paths: paths, minutes: 30, valve: "AA", open: &open)
+        print(result)
+        open = Set<String>()
+        result = findMaxPressurePt2(valveListWithFlow, paths: paths, m1: 26, m2: 26, v1: "AA", v2: "AA", open: &open)
+        print(result)
+    }
+    
+    func findMaxPressurePt1(_ valves: [String: Valve], paths: Paths, minutes: Int, valve: String, open: inout Set<String>) -> Int {
+        var result = 0
+        for p in paths[valve]! {
+            if !open.contains(p.valve) && minutes >= p.time + 1 {
+                open.insert(p.valve)
+                let remainingTime = minutes - p.time - 1
+                let pressure = findMaxPressurePt1(valves, paths: paths, minutes: remainingTime, valve: p.valve, open: &open)
+                open.remove(p.valve)
+                result = max(result, pressure + remainingTime * valves[p.valve]!.flow)
+            }
+        }
+        return result
+    }
+    
+    func findMaxPressurePt2(_ valves: [String: Valve], paths: Paths, m1: Int, m2: Int, v1: String, v2: String, open: inout Set<String>) -> Int {
+        var result = 0
+        for p in paths[v1]! {
+            if !open.contains(p.valve) && m1 >= p.time + 1 {
+                open.insert(p.valve)
+                let remainingTime = m1 - p.time - 1
+                let pressure = findMaxPressurePt2(valves, paths: paths, m1: m2, m2: remainingTime, v1: v2, v2: p.valve, open: &open)
+                open.remove(p.valve)
+                result = max(result, pressure + remainingTime * valves[p.valve]!.flow)
+            }
+        }
+        return result
+    }
     
     public func run13(){
         let rawString = day13

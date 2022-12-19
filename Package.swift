@@ -12,6 +12,7 @@ let package = Package(
         //.package(url: "https://github.com/SwiftGen/SwiftGen.git", from: "6.6.2")
 //        .package(url: "https://github.com/SwiftGen/SwiftGenPlugin", from: "6.6.2"),
         //             https://github.com/SwiftGen/SwiftGen.git
+        .package(url: "https://github.com/davecom/SwiftGraph", .upToNextMajor(from: "3.0.0"))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
