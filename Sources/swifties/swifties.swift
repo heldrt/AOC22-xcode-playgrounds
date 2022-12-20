@@ -5,11 +5,161 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run17()
+        mine.run18()
     }
 }
 
 class Mine {
+    
+    public func run18() {
+        let input: [String] = day18.components(separatedBy: "\n")
+        var xMax = 0
+        var yMax = 0
+        var zMax = 0
+        
+        for line in input {
+            let coordinates = line.components(separatedBy: ",")
+            xMax = max(xMax, Int(coordinates[0]) ?? 0)
+            yMax = max(yMax, Int(coordinates[1]) ?? 0)
+            zMax = max(zMax, Int(coordinates[2]) ?? 0)
+        }
+        let maxValues = String(xMax) + ", " + String(yMax) + ", " + String(zMax)
+        print(maxValues)
+        let zCoords = Array(repeating: false, count: zMax + 2)
+        let yAndZCoords = Array(repeating: zCoords, count: yMax + 2)
+        var volume = Array(repeating: yAndZCoords, count: xMax + 2)
+        
+        let checkVolume = volume
+        
+        for line in input {
+            let coordinates = line.components(separatedBy: ",")
+            let xCoord = Int(coordinates[0]) ?? 0
+            let yCoord = Int(coordinates[1]) ?? 0
+            let zCoord = Int(coordinates[2]) ?? 0
+            volume[xCoord][yCoord][zCoord] = true
+        }
+
+        var totalExposedSides = 0
+        // Along x
+        for z in 0..<volume[0][0].count {
+            for y in 0..<volume[0].count {
+                var currentOccupancy = false
+                for x in 0..<volume.count {
+                    if volume[x][y][z] != currentOccupancy {
+                        if (!volume[x][y][z]) {
+                            var newCheckVolume = checkVolume
+                            if (!pathToEdges(x: x, y: y, z: z, volume: &volume, checkVolume: &newCheckVolume)) {
+                                volume[x][y][z] = true
+                            } else {
+                                totalExposedSides = totalExposedSides + 1
+                                currentOccupancy = !currentOccupancy
+                            }
+                        } else {
+                            totalExposedSides = totalExposedSides + 1
+                            currentOccupancy = !currentOccupancy
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Along y
+        for z in 0..<volume[0][0].count {
+            for x in 0..<volume.count {
+                var currentOccupancy = false
+                for y in 0..<volume[0].count {
+                    if volume[x][y][z] != currentOccupancy {
+                        if (!volume[x][y][z]) {
+                            var newCheckVolume = checkVolume
+                            if (!pathToEdges(x: x, y: y, z: z, volume: &volume, checkVolume: &newCheckVolume)) {
+                                volume[x][y][z] = true
+                            } else {
+                                totalExposedSides = totalExposedSides + 1
+                                currentOccupancy = !currentOccupancy
+                            }
+                        } else {
+                            totalExposedSides = totalExposedSides + 1
+                            currentOccupancy = !currentOccupancy
+                        }
+                    }
+                }
+            }
+        }
+        // Along z
+        for x in 0..<volume.count {
+            for y in 0..<volume[0].count {
+                var currentOccupancy = false
+                for z in 0..<volume[0][0].count {
+                    if volume[x][y][z] != currentOccupancy {
+                        if (!volume[x][y][z]) {
+                            var newCheckVolume = checkVolume
+                            if (!pathToEdges(x: x, y: y, z: z, volume: &volume, checkVolume: &newCheckVolume)) {
+                                volume[x][y][z] = true
+                            } else {
+                                totalExposedSides = totalExposedSides + 1
+                                currentOccupancy = !currentOccupancy
+                            }
+                        } else {
+                            totalExposedSides = totalExposedSides + 1
+                            currentOccupancy = !currentOccupancy
+                        }
+                    }
+                }
+            }
+        }
+        
+        print(totalExposedSides)
+    }
+    
+    func pathToEdges(x: Int, y: Int, z: Int, volume: inout [[[Bool]]], checkVolume: inout [[[Bool]]]) -> Bool {
+        let xMax = volume.count - 1
+        let yMax = volume[0].count - 1
+        let zMax = volume[0][0].count - 1
+        if (volume[x][y][z]) {
+            checkVolume[x][y][z] = true
+            return false
+        } else if ((x == 0) || (x == xMax) ||
+            (y == 0) || (y == yMax) ||
+            (z == 0) || (z == zMax)) {
+            checkVolume[x][y][z] = true
+            return true
+        } else {
+            checkVolume[x][y][z] = true
+            if (!checkVolume[x+1][y][z]) {
+                if pathToEdges(x: x+1, y: y, z: z, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            if (!checkVolume[x-1][y][z]) {
+                if pathToEdges(x: x-1, y: y, z: z, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            if (!checkVolume[x][y+1][z]) {
+                if pathToEdges(x: x, y: y+1, z: z, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            if (!checkVolume[x][y-1][z]) {
+                if pathToEdges(x: x, y: y-1, z: z, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            if (!checkVolume[x][y][z+1]) {
+                if pathToEdges(x: x, y: y, z: z+1, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            if (!checkVolume[x][y][z-1]) {
+                if pathToEdges(x: x, y: y, z: z-1, volume: &volume, checkVolume: &checkVolume) {
+                    return true
+                }
+            }
+            return false
+        }
+    }
+    
+    
     
     func getStartingHeight(chamber: [[Int]:String]) -> Int {
         var startingHeight = 4
@@ -22,7 +172,6 @@ class Mine {
     }
     public func run17() {
         let input = day17
-        let printChamber = false
         var pieces = [[(Int,Int)]]()
         let piece1 = [(0,0), (1,0), (2,0), (3,0)]
         pieces.append(piece1)
@@ -45,7 +194,7 @@ class Mine {
         var cumulativeHeight = 0
         var maxHeight = 0
         var tetrisRowIndices = [Int]()
-        var loopedAmount = 0
+        let loopedAmount = 0
         var tetrisIndices = [[Int]]()
         var mIndices = [Int]()
         var m = 1
@@ -197,7 +346,7 @@ class Mine {
                 valvesWithFlow.append(currentValve)
             }
         }
-        var valveGraph: WeightedGraph<String, Int> = WeightedGraph<String, Int>(vertices: fullValveList)
+        let valveGraph: WeightedGraph<String, Int> = WeightedGraph<String, Int>(vertices: fullValveList)
         for v in 0..<fullValveList.count {
             for connection in connectionList[v] {
                 if (Int(fullValveList.firstIndex(of: connection) ?? 0) > v) {
@@ -213,7 +362,7 @@ class Mine {
             for destination in valvesWithFlow {
                 if start != destination {
                     let valvePath: [WeightedEdge<Int>] = pathDictToPath(from: valveGraph.indexOfVertex(start)!, to: valveGraph.indexOfVertex(destination)!, pathDict: pathDict)
-                    var stops: [String] = valveGraph.edgesToVertices(edges: valvePath)
+                    let stops: [String] = valveGraph.edgesToVertices(edges: valvePath)
                     let path = Path(from: start, to: destination)
                     if paths[path.from] == nil {
                         paths[path.from] = [Destination]()
@@ -643,7 +792,7 @@ class Mine {
                     }
                 }
                 if fromY == toY {
-                    let step = (toX-fromX).signum()
+                    _ = (toX-fromX).signum()
                     for x: Int in min(fromX, toX)...max(fromX, toX) {
                         let key: [Int] = [x,fromY]
                         if grid[key] == nil {
