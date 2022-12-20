@@ -5,11 +5,201 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run20()
+        mine.run21()
     }
 }
 
 class Mine {
+    
+    public func run21() {
+        let input: [String] = day21ex.components(separatedBy: "\n")
+
+    }
+    
+    
+    public func run19() {
+        let input: [String] = day19.components(separatedBy: "\n")
+        var blueprints = [Blueprint]()
+        
+        for line in input {
+            var numbers = [Int]()
+
+            let stringArray = line.components(separatedBy: CharacterSet.decimalDigits.inverted)
+            for item in stringArray {
+                if let number = Int(item) {
+                    numbers.append(number)
+                }
+            }
+            let newBlueprint = Blueprint(
+                ore: Cost(ore: numbers[1], clay: 0, obsidian: 0),
+                clay: Cost(ore: numbers[2], clay: 0, obsidian: 0),
+                obsidian: Cost(ore: numbers[3], clay: numbers[4], obsidian: 0),
+                geode: Cost(ore: numbers[5], clay: 0, obsidian: numbers[6])
+            )
+            blueprints.append(newBlueprint)
+        }
+//        print("Part one:", blueprintsQuality(blueprints, time: 24))
+        print("Part two:", blueprintsMaxGeodes(blueprints, time: 32))
+    }
+    
+    enum Resource {
+        case ore, clay, obsidian, geode
+    }
+
+    struct Cost {
+        let ore: Int
+        let clay: Int
+        let obsidian: Int
+    }
+    
+    struct State: Hashable {
+        var ore: Int
+        var clay: Int
+        var obsidian: Int
+        var geodes: Int
+
+        var oreRobots: Int
+        var clayRobots: Int
+        var obsidianRobots: Int
+        var geodeRobots: Int
+
+        var time: Int
+
+        func canBuild(_ cost: Cost) -> Bool {
+            return cost.ore <= ore && cost.clay <= clay && cost.obsidian <= obsidian
+        }
+
+        func shouldBuild(_ b: inout Blueprint, _ typ: Resource) -> Bool {
+            let maxReq = b.maxCost[typ] ?? 0
+            switch typ {
+            case .ore: return oreRobots < maxReq
+            case .geode: return true
+            case .clay: return clayRobots < maxReq
+            case .obsidian: return obsidianRobots < maxReq
+            }
+        }
+
+        mutating func collect() {
+            ore += oreRobots
+            clay += clayRobots
+            obsidian += obsidianRobots
+            geodes += geodeRobots
+            time -= 1
+        }
+
+        mutating func pay(_ cost: Cost) {
+            ore -= cost.ore
+            clay -= cost.clay
+            obsidian -= cost.obsidian
+        }
+
+        mutating func build(_ typ: Resource, _ cost: Cost) {
+            pay(cost)
+            switch typ {
+            case .ore: oreRobots += 1
+            case .clay: clayRobots += 1
+            case .obsidian: obsidianRobots += 1
+            case .geode: geodeRobots += 1
+            }
+        }
+    }
+    
+    func blueprintsQuality(_ bs: [Blueprint], time: Int) -> Int {
+        var totalQuality = 0
+        for i in 0 ..< bs.count {
+            var b = bs[i]
+            totalQuality += (i + 1) * b.maxGeodes(time: time)
+        }
+        return totalQuality
+    }
+    
+    func blueprintsMaxGeodes(_ bs: [Blueprint], time: Int) -> Int {
+        var maxGeodes = [Int]()
+        for i in 0..<min(3,bs.count) {
+            print(i)
+            var b = bs[i]
+            maxGeodes.append(b.maxGeodes(time: time))
+        }
+        return maxGeodes[0]*maxGeodes[1]*maxGeodes[2]
+    }
+    
+    struct Blueprint {
+        let ore: Cost
+        let clay: Cost
+        let obsidian: Cost
+        let geode: Cost
+        
+        lazy var robots: [(Resource, Cost)] = [(.geode, geode), (.obsidian, obsidian), (.clay, clay), (.ore, ore)]
+        
+        lazy var maxCost: [Resource: Int] = {
+            var result = [Resource: Int]()
+            for (_, cost) in robots {
+                result[.ore] = max(result[.ore] ?? 0, cost.ore)
+                result[.clay] = max(result[.clay] ?? 0, cost.clay)
+                result[.obsidian] = max(result[.obsidian] ?? 0, cost.obsidian)
+            }
+            return result
+        }()
+        
+        mutating func maxGeodes(time: Int) -> Int {
+            var best = 0
+            var cache = [State: Int]()
+            let state = State(
+                ore: 0, clay: 0, obsidian: 0, geodes: 0,
+                oreRobots: 1, clayRobots: 0, obsidianRobots: 0, geodeRobots: 0,
+                time: time
+            )
+            return maxGeodes(state: state, cache: &cache, best: &best, banned: [])
+        }
+        
+        mutating func maxGeodes(state: State, cache: inout [State: Int], best: inout Int, banned: [Resource]) -> Int {
+                if state.time == 0 {
+                    best = max(best, state.geodes)
+                    return state.geodes
+                }
+
+                if let geodes = cache[state] {
+                    return geodes
+                }
+
+                if best > 0 && (state.geodeRobots * state.time + state.geodes + state.time) < best / 5 {
+                    return 0
+                }
+
+                var result = 0
+                var newState = state
+                newState.collect()
+
+                var newBanned = [Resource]()
+                for (typ, cost) in robots {
+                    if state.time == 1 || (state.time < 3 && typ != .geode) {
+                        break
+                    }
+
+                    if !state.shouldBuild(&self, typ) || banned.contains(typ) {
+                        continue
+                    }
+
+                    if state.canBuild(cost) {
+                        var ss = newState
+                        ss.build(typ, cost)
+                        result = max(result, maxGeodes(state: ss, cache: &cache, best: &best, banned: []))
+                        cache[ss] = result
+                        if typ == .geode {
+                            return result
+                        }
+
+                        newBanned.append(typ)
+                    }
+                }
+
+                result = max(result, maxGeodes(state: newState, cache: &cache, best: &best, banned: newBanned))
+                cache[newState] = result
+
+                return result
+            }
+    }
+
 
     public func run20() {
         let input: [String] = day20.components(separatedBy: "\n")
