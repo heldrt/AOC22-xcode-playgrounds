@@ -5,11 +5,48 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run18()
+        mine.run20()
     }
 }
 
 class Mine {
+
+    public func run20() {
+        let input: [String] = day20.components(separatedBy: "\n")
+        var numbers = [Int]()
+        var indices = [Int]()
+        var i = 0
+        for line in input {
+            numbers.append((Int(line) ?? 0) * 811589153)
+            indices.append(i)
+            i += 1
+        }
+        let originalNumbers = numbers
+        
+        for _ in 0..<10 {
+            for i in 0..<originalNumbers.count {
+                let index = indices.firstIndex(of: i) ?? 0
+                let number = numbers[index]
+                if (number == 0) {
+                    continue
+                }
+                numbers.remove(at: index)
+                indices.remove(at: index)
+                var newIndex = (index + number) % numbers.count
+                if newIndex < 0 {
+                    newIndex += numbers.count
+                }
+                numbers.insert(number, at: newIndex)
+                indices.insert(i, at: newIndex)
+            }
+        }
+        
+        let indexOfZero = numbers.firstIndex(of: 0) ?? 0
+        let index1000 = (indexOfZero + 1000) % (numbers.count)
+        let index2000 = (indexOfZero + 2000) % (numbers.count)
+        let index3000 = (indexOfZero + 3000) % (numbers.count)
+        print(numbers[index1000] + numbers[index2000] + numbers[index3000])
+    }
     
     public func run18() {
         let input: [String] = day18.components(separatedBy: "\n")
