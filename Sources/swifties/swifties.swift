@@ -12,11 +12,115 @@ public struct swifties {
 class Mine {
     
     public func run21() {
-        let input: [String] = day21ex.components(separatedBy: "\n")
-
+        let input: [String] = day21.components(separatedBy: "\n")
+        var numberMonkeys:[String:Int] = .init()
+        var operationMonkeys:[String:[String]] = .init()
+        for line in input {
+            let components = line.components(separatedBy: " ")
+            let endOfName = components[0].firstIndex(of: ":")!
+            let name = String(components[0][..<endOfName])
+//            print(name)
+            if (components.count == 2) {
+                numberMonkeys[name] = Int(components[1]) ?? 0
+            } else if (components.count == 4) {
+                let monkeyData = [components[1], String(components[2]), components[3]]
+                operationMonkeys[name] = monkeyData
+            }
+        }
+        
+//        while (numberMonkeys["root"] == nil){
+//            for monkey in operationMonkeys {
+//                let req1 = monkey.value[0]
+//                let req2 = monkey.value[2]
+//                if (numberMonkeys[req1] != nil && numberMonkeys[req2] != nil) {
+//                    var newValue = 0
+//                    if (monkey.value[1] == "*") {
+//                        newValue = numberMonkeys[req1]! * numberMonkeys[req2]!
+//                    } else if (monkey.value[1] == "/") {
+//                        newValue = numberMonkeys[req1]! / numberMonkeys[req2]!
+//                    } else if (monkey.value[1] == "+") {
+//                        newValue = numberMonkeys[req1]! + numberMonkeys[req2]!
+//                    } else {
+//                        newValue = numberMonkeys[req1]! - numberMonkeys[req2]!
+//                    }
+//                    numberMonkeys[monkey.key] = newValue
+//                    operationMonkeys.removeValue(forKey: monkey.key)
+//                }
+//            }
+//        }
+//        print(numberMonkeys["root"]!)
+        
+        if operationMonkeys["humn"] != nil {
+            operationMonkeys.removeValue(forKey: "humn")
+        }
+        numberMonkeys["humn"] = 0
+        
+        let originalOperations = operationMonkeys
+        let originalNumbers = numberMonkeys
+        
+        var root1 = 0
+        var root2 = 1000
+        var stepSize = 1000000000
+        var stepDirection = 1
+        var guess = 0
+        var lastDifference = Int.max
+        
+        while root1 != root2 {
+            numberMonkeys = originalNumbers
+            operationMonkeys = originalOperations
+            if operationMonkeys["humn"] != nil {
+                operationMonkeys.removeValue(forKey: "humn")
+            }
+            numberMonkeys["humn"] = guess
+            
+            while (numberMonkeys["root"] == nil){
+                for monkey in operationMonkeys {
+                    let req1 = monkey.value[0]
+                    let req2 = monkey.value[2]
+                    if (numberMonkeys[req1] != nil && numberMonkeys[req2] != nil) {
+                        if (monkey.key == "root") {
+                            root1 = numberMonkeys[req1]!
+                            root2 = numberMonkeys[req2]!
+                            numberMonkeys[monkey.key] = 0
+                            break
+                        } else {
+                            var newValue = 0
+                            if (monkey.value[1] == "*") {
+                                newValue = numberMonkeys[req1]! * numberMonkeys[req2]!
+                            } else if (monkey.value[1] == "/") {
+                                newValue = numberMonkeys[req1]! / numberMonkeys[req2]!
+                            } else if (monkey.value[1] == "+") {
+                                newValue = numberMonkeys[req1]! + numberMonkeys[req2]!
+                            } else {
+                                newValue = numberMonkeys[req1]! - numberMonkeys[req2]!
+                            }
+                            numberMonkeys[monkey.key] = newValue
+                            operationMonkeys.removeValue(forKey: monkey.key)
+                        }
+                    }
+                }
+            }
+            
+            let newDifference = abs(root1 - root2)
+            
+            if newDifference > lastDifference {
+                stepDirection *= -1
+                stepSize /= 2
+            }
+            lastDifference = newDifference
+            print(numberMonkeys["humn"])
+            print(root1)
+            print(root2)
+            guess += stepSize * stepDirection
+        }
     }
     
-    
+//    struct Monkey {
+//        let req1: String
+//        let req2: String
+//        let operation: String
+//    }
+//
     public func run19() {
         let input: [String] = day19.components(separatedBy: "\n")
         var blueprints = [Blueprint]()
