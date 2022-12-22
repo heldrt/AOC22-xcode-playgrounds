@@ -5,11 +5,477 @@ public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run21()
+        mine.run23()
     }
 }
 
 class Mine {
+    
+    public func run23() {
+        let input: [String] = day23ex.components(separatedBy: "\n")
+    }
+    
+    public func run22() {
+        let input: [String] = day22.components(separatedBy: "\n\n")
+
+        var grid:[[Int]:String] = .init()
+        let mapLines = input[0].components(separatedBy: "\n")
+        var maxX = 0
+        let maxY = mapLines.count
+        for row in 0..<mapLines.count {
+            maxX = max(maxX,mapLines[row].count)
+            for col in 0..<mapLines[row].count {
+                let s = String(mapLines[row][mapLines[row].index(mapLines[row].startIndex, offsetBy: col)])
+                if s != " " {
+                    grid[[col+1,row+1]] = s
+                }
+            }
+        }
+        print(maxX/3)
+        print(maxY/4)
+        
+        let directionsString = input[1]
+        let distanceStrings = directionsString.components(separatedBy: CharacterSet.decimalDigits.inverted)
+        var distances = [Int]()
+        for item in distanceStrings {
+            if let number = Int(item) {
+                distances.append(number)
+            }
+        }
+        let directionStrings = directionsString.components(separatedBy: CharacterSet.decimalDigits)
+        var directions = [String]()
+        for item in directionStrings {
+            if item != "" {
+                directions.append(item)
+            }
+        }
+        // Find first position
+        var currentX = 1
+        var currentY = 1
+        var foundStart = false
+        while (!foundStart){
+            if grid[[currentX,currentY]] != nil {
+                foundStart = true
+            } else {
+                currentX += 1
+            }
+        }
+        print(currentX)
+        var currentXAdd = 1
+        var currentYAdd = 0
+        
+        // print the grid
+//        for y: Int in 0...maxY {
+//            var line: String = ""
+//            for x: Int in 1...maxX {
+//                let key: [Int] = [x,y]
+//                if grid[key] == nil {
+//                    line += " "
+//                } else {
+//                    line += grid[key]!
+//                }
+//            }
+//            print(line)
+//        }
+                
+        for i in 0..<distances.count {
+            var distanceToGo = distances[i]
+            var endFound = false
+            while !endFound {
+                let nextSpot = grid[[currentX + currentXAdd,currentY + currentYAdd]]
+//                print(nextSpot)
+                if (nextSpot == "#") {
+                    endFound = true
+                } else if (nextSpot == nil) {
+                    if currentXAdd == 1 {
+                        switch currentY {
+                        case 1...50:
+                            var potentialX = maxX
+                            var potentialY = (51 - currentY) + 100
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = -1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 51...100:
+                            var potentialX = currentY + 50
+                            var potentialY = maxY
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = -1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 101...150:
+                            var potentialX = maxX
+                            var potentialY = (151-currentY)
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = -1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 151...200:
+                            var potentialX = currentY - 100
+                            var potentialY = maxY
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = -1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }                        default:
+                            print("")
+                        }
+
+//                        var potentialX = 1
+//                        var foundOtherSide = false
+//                        while (!foundOtherSide){
+//                            if grid[[potentialX,currentY]] != nil {
+//                                foundOtherSide = true
+//                            } else {
+//                                potentialX += 1
+//                            }
+//                        }
+//                        if grid[[potentialX,currentY]] == "#" {
+//                            endFound = true
+//                        } else {
+//                            currentX = potentialX
+//                        }
+                    } else if currentXAdd == -1 {
+                        switch currentY {
+                        case 1...50:
+                            var potentialX = 0
+                            var potentialY = (51 - currentY) + 100
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 51...100:
+                            var potentialX = currentY - 50
+                            var potentialY = 0
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = 1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 101...150:
+                            var potentialX = 0
+                            var potentialY = 151 - currentY
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 151...200:
+                            var potentialX = currentY - 100
+                            var potentialY = 1
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = 1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        default:
+                            print("")
+                        }
+//                        var potentialX = maxX
+//                        var foundOtherSide = false
+//                        while (!foundOtherSide){
+//                            if grid[[potentialX,currentY]] != nil {
+//                                foundOtherSide = true
+//                            } else {
+//                                potentialX -= 1
+//                            }
+//                        }
+//                        if grid[[potentialX,currentY]] == "#" {
+//                            endFound = true
+//                        } else {
+//                            currentX = potentialX
+//                        }
+                    } else if currentYAdd == 1 {
+                        switch currentX {
+                        case 1...50:
+                            var potentialX = currentX + 100
+                            var potentialY = 1
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = 1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 51...100:
+                            var potentialX = maxX
+                            var potentialY = currentX + 100
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = -1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 101...150:
+                            var potentialX = maxX
+                            var potentialY = currentX - 50
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = -1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        default:
+                            print("")
+                        }
+//                        var potentialY = 1
+//                        var foundOtherSide = false
+//                        while (!foundOtherSide){
+//                            if grid[[currentX,potentialY]] != nil {
+//                                foundOtherSide = true
+//                            } else {
+//                                potentialY += 1
+//                            }
+//                        }
+//                        if grid[[currentX,potentialY]] == "#" {
+//                            endFound = true
+//                        } else {
+//                            currentY = potentialY
+//                        }
+                    } else if currentYAdd == -1 {
+                        switch currentX {
+                        case 1...50:
+                            var potentialX = 0
+                            var potentialY = currentX + 50
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 51...100:
+                            var potentialX = 0
+                            var potentialY = currentX + 100
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialX += 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 1
+                                currentYAdd = 0
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        case 101...150:
+                            var potentialX = currentX - 100
+                            var potentialY = maxY
+                            var foundOtherSide = false
+                            while (!foundOtherSide){
+                                if grid[[potentialX,potentialY]] != nil {
+                                    foundOtherSide = true
+                                } else {
+                                    potentialY -= 1
+                                }
+                            }
+                            if grid[[potentialX,potentialY]] == "#" {
+                                endFound = true
+                            } else {
+                                currentXAdd = 0
+                                currentYAdd = -1
+                                currentX = potentialX
+                                currentY = potentialY
+                            }
+                        default:
+                            print("")
+                        }
+//                        var potentialY = maxY
+//                        var foundOtherSide = false
+//                        while (!foundOtherSide){
+//                            if grid[[currentX,potentialY]] != nil {
+//                                foundOtherSide = true
+//                            } else {
+//                                potentialY -= 1
+//                            }
+//                        }
+//                        if grid[[currentX,potentialY]] == "#" {
+//                            endFound = true
+//                        } else {
+//                            currentY = potentialY
+//                        }
+                    }
+                    distanceToGo -= 1
+                    if (distanceToGo == 0) {
+                        endFound = true
+                    }
+                    // Wrap around
+                } else if (nextSpot == ".") {
+                    currentX += currentXAdd
+                    currentY += currentYAdd
+                    distanceToGo -= 1
+                    if (distanceToGo == 0) {
+                        endFound = true
+                    }
+                }
+            }
+            
+            if i < directions.count {
+                var newXAdd = 0
+                var newYAdd = 0
+                
+                if directions[i] == "R" {
+                    newXAdd = currentXAdd * 0 + currentYAdd * -1
+                    newYAdd = currentXAdd * 1 + currentYAdd * 0
+                } else {
+                    newXAdd = currentXAdd * 0 + currentYAdd * 1
+                    newYAdd = currentXAdd * -1 + currentYAdd * 0
+                }
+                currentXAdd = newXAdd
+                currentYAdd = newYAdd
+            }
+        }
+        let endSpot = "X: " + String(currentX) + ", Y: " + String(currentY)
+        print(endSpot)
+        var facing = 0
+        if currentXAdd == 1 {
+            facing = 0
+        } else if (currentXAdd == -1) {
+            facing = 2
+        } else if (currentYAdd == 1) {
+            facing = 1
+        } else {
+            facing = 3
+        }
+        
+        let result = 1000 * currentY + 4 * currentX + facing
+        print(result)
+    }
     
     public func run21() {
         let input: [String] = day21.components(separatedBy: "\n")
@@ -19,7 +485,6 @@ class Mine {
             let components = line.components(separatedBy: " ")
             let endOfName = components[0].firstIndex(of: ":")!
             let name = String(components[0][..<endOfName])
-//            print(name)
             if (components.count == 2) {
                 numberMonkeys[name] = Int(components[1]) ?? 0
             } else if (components.count == 4) {
