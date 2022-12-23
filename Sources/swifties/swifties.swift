@@ -11,8 +11,156 @@ public struct swifties {
 
 class Mine {
     
+    public func run24() {
+        let input: [String] = day24ex.components(separatedBy: "\n")
+    }
+    
     public func run23() {
-        let input: [String] = day23ex.components(separatedBy: "\n")
+        let input: [String] = day23.components(separatedBy: "\n")
+        
+        var grid:[[Int]:String] = .init()
+        var minX = Int.max
+        var maxX = 0
+        var minY = Int.max
+        var maxY = 0
+        var totalElves = 0
+        for i in 0..<input.count {
+            for j in 0..<input[i].count {
+                let s = String(input[i][input[i].index(input[i].startIndex, offsetBy: j)])
+                if s == "#" {
+                    minX = min(minX, j)
+                    maxX = max(maxX, j)
+                    minY = min(minY, i)
+                    maxY = max(maxY, i)
+                    grid[[j,i]] = "#"
+                    totalElves += 1
+                }
+            }
+        }
+        
+        // print the grid
+//        for y: Int in minY...maxY {
+//            var line: String = ""
+//            for x: Int in minX...maxX {
+//                let key: [Int] = [x,y]
+//                if grid[key] == nil {
+//                    line += "."
+//                } else {
+//                    line += grid[key]!
+//                }
+//            }
+//            print(line)
+//        }
+        
+        let xAdds = [0, 0, -1, 1]
+        let yAdds = [-1, 1, 0, 0]
+        var addIndex = 0
+        
+        let rounds = 222
+        var finalRound = 0
+        var foundEnd = false
+        var i = 0
+        while !foundEnd{
+            var positionMaps:[[Int]:[Int]] = .init()
+            var unmovedElves = 0
+            let countedSet = NSCountedSet()
+            for elf in grid {
+                let position = elf.key
+                var othersPresent = false
+                for x in -1...1 {
+                    for y in -1...1{
+                        if (x == 0 && y == 0){
+                            continue
+                        } else {
+                            if grid[[position[0]+x,position[1]+y]] != nil {
+                                othersPresent = true
+                            }
+                        }
+                    }
+                }
+                if !othersPresent {
+                    unmovedElves += 1
+                    positionMaps[position] = position
+                } else {
+                    var tempAddIndex = addIndex
+                    var foundSpot = false
+                    var checkProgress = 0
+                    while checkProgress < 4 && !foundSpot {
+                        let xAdd = xAdds[tempAddIndex]
+                        let yAdd = yAdds[tempAddIndex]
+                        if xAdd == 0 {
+                            if (grid[[position[0]-1,position[1]+yAdd]] == nil &&
+                                grid[[position[0],position[1]+yAdd]] == nil &&
+                                grid[[position[0]+1,position[1]+yAdd]] == nil){
+                                positionMaps[position] = [position[0]+xAdd,position[1]+yAdd]
+                                countedSet.add([position[0]+xAdd,position[1]+yAdd])
+                                foundSpot = true
+                            } else {
+                                tempAddIndex = (tempAddIndex + 1) % 4
+                                checkProgress += 1
+                            }
+                        } else {
+                            if (grid[[position[0]+xAdd,position[1]-1]] == nil &&
+                                grid[[position[0]+xAdd,position[1]]] == nil &&
+                                grid[[position[0]+xAdd,position[1]+1]] == nil){
+                                positionMaps[position] = [position[0]+xAdd,position[1]+yAdd]
+                                countedSet.add([position[0]+xAdd,position[1]+yAdd])
+                                foundSpot = true
+                            } else {
+                                tempAddIndex = (tempAddIndex + 1) % 4
+                                checkProgress += 1
+                            }
+                        }
+                    }
+                }
+            }
+            
+//            for (_, value) in positionMaps {
+//                countedSet.add(value)
+//            }
+//
+            for mapping in positionMaps {
+                let currentPosition = mapping.key
+                let intendedPosition = mapping.value
+                if (countedSet.count(for: intendedPosition) < 2) {
+                    grid[currentPosition] = nil
+                    grid[intendedPosition] = "#"
+//                    minX = min(minX, intendedPosition[0])
+//                    maxX = max(maxX, intendedPosition[0])
+//                    minY = min(minY, intendedPosition[1])
+//                    maxY = max(maxY, intendedPosition[1])
+                }
+            }
+            
+            let output = String(unmovedElves) + " of " + String(totalElves)
+            print(output)
+            if unmovedElves == totalElves {
+                finalRound = i + 1
+                foundEnd = true
+                break;
+            }
+            i = i+1
+            addIndex = (addIndex + 1) % 4
+        }
+        
+    
+//        var totalEmpty = 0
+//        for y: Int in minY...maxY {
+//            var line: String = ""
+//            for x: Int in minX...maxX {
+//                let key: [Int] = [x,y]
+//                if grid[key] == nil {
+//                    line += "."
+//                    totalEmpty += 1
+//                } else {
+//                    line += grid[key]!
+//                }
+//            }
+//            print(line)
+//        }
+//        print(totalEmpty)
+        print(finalRound)
+
     }
     
     public func run22() {
