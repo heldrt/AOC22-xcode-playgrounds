@@ -1,18 +1,163 @@
 import Foundation
+import RegexBuilder
+
 
 @main
 public struct swifties {
     static var mine = Mine()
 
     public static func main() {
-        mine.run23()
+        mine.run25()
     }
+}
+
+enum Direction: Character, CaseIterable, CustomStringConvertible {
+    case north = "^", east = ">", west = "<", south = "v"
+    var description: String {
+        "\(rawValue)"
+    }
+}
+
+struct Point: Hashable, CustomStringConvertible {
+    var x: Int
+    var y: Int
+    
+    static let zero = Point(x: 0, y: 0)
+    
+    func moving(in direction: Direction) -> Point {
+        switch direction {
+        case .north: return Point(x: x, y: y - 1)
+        case .south: return Point(x: x, y: y + 1)
+        case .west: return Point(x: x - 1, y: y)
+        case .east: return Point(x: x + 1, y: y)
+        }
+    }
+    
+    var neighbors: Set<Point> {
+        Set(
+            Direction.allCases.map {
+                self.moving(in: $0)
+            }
+        )
+    }
+    
+    var description: String {
+        "(x: \(x), y: \(y))"
+    }
+}
+
+typealias Blizzards = [Point: Set<Direction>]
+
+extension Blizzards {
+   mutating func iterate(in board: Board) {
+       var newBlizzards: [Point: Set<Direction>] = [:]
+       
+       for (blizzardPosition, directions) in self {
+           for direction in directions {
+               var newPosition = blizzardPosition.moving(in: direction)
+               switch direction {
+               case .north: newPosition.y = board.yRange.contains(newPosition.y) ? newPosition.y :board.yRange.upperBound
+               case .south: newPosition.y = board.yRange.contains(newPosition.y) ? newPosition.y :board.yRange.lowerBound
+               case .east: newPosition.x = board.xRange.contains(newPosition.x) ? newPosition.x :board.xRange.lowerBound
+               case .west: newPosition.x = board.xRange.contains(newPosition.x) ? newPosition.x :board.xRange.upperBound
+               }
+               
+               newBlizzards[newPosition, default: []].insert(direction)
+           }
+       }
+       self = newBlizzards
+   }
+}
+
+struct Board: Hashable {
+    var initial: Point
+    var final: Point
+    var xRange: ClosedRange<Int>
+    var yRange: ClosedRange<Int>
 }
 
 class Mine {
     
+    func run25() {
+        let input: [String] = day25ex.components(separatedBy: "\n")
+    }
+    
     public func run24() {
-        let input: [String] = day24ex.components(separatedBy: "\n")
+        let input: [String] = day24.components(separatedBy: "\n")
+        
+        let initialPosition = Point(x: 1,y: 0)
+        var finalPosition: Point!
+        var blizzards = Blizzards()
+        
+        let minX = 1
+        let minY = 1
+        var maxX = 0
+        var maxY = 0
+        
+        for (y, line) in input.enumerated() {
+            for (x, char) in line.enumerated() {
+                if (char != "#") {
+                    let newPoint = Point(x: x, y: y)
+                    if let direction = Direction(rawValue: char) {
+                        blizzards[newPoint,default: []].insert(direction)
+                        maxX = max(maxX,x)
+                        maxY = max(maxY,y)
+                    } else if char == "." {
+                        finalPosition = newPoint
+                    }
+                }
+            }
+        }
+        
+        let board = Board(
+            initial: initialPosition,
+            final: finalPosition,
+            xRange: minX...maxX,
+            yRange: minY...maxY
+        )
+        
+        let part1Solution = solve24(board: board, blizzards: &blizzards)
+        let part1SolutionString = "Part I: " + String(part1Solution) + " minutes"
+        print(part1SolutionString)
+        
+        let board2 = Board(
+            initial: finalPosition,
+            final: initialPosition,
+            xRange: minX...maxX,
+            yRange: minY...maxY
+        )
+        
+        let part2SolutionA = solve24(board: board2, blizzards: &blizzards)
+        let part2SolutionB = solve24(board: board, blizzards: &blizzards)
+        
+        let part2Solution = part1Solution + part2SolutionA + part2SolutionB
+        let part2SolutionString = "Part II: " + String(part2Solution) + " minutes"
+        print(part2SolutionString)
+    }
+    
+    public func solve24(board: Board, blizzards: inout Blizzards) -> Int {
+        // Start with a set that only contains the initial point
+        var visitedPoints = Set([board.initial])
+        var minutes = 0
+        
+        while !(visitedPoints.contains(board.final)) {
+            minutes += 1
+            
+            blizzards.iterate(in: board)
+            
+            let possibleNewPoints = Set(visitedPoints.lazy.flatMap(\.neighbors)).union(visitedPoints)
+                .filter { newPosition in
+                    (board.xRange.contains(newPosition.x) && board.yRange.contains(newPosition.y))
+                    || newPosition == board.initial
+                    || newPosition == board.final
+                }
+                .filter {!blizzards.keys.contains($0)}
+            
+            visitedPoints = possibleNewPoints
+        }
+            
+        return minutes
+        
     }
     
     public func run23() {
