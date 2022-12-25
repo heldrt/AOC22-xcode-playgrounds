@@ -79,7 +79,78 @@ struct Board: Hashable {
 class Mine {
     
     func run25() {
-        let input: [String] = day25ex.components(separatedBy: "\n")
+        let input: [String] = day25.components(separatedBy: "\n")
+        
+        var totalValue = 0
+        for line in input {
+            let newValue = convertFromSNAFUToInt(string: line)
+            totalValue += newValue
+        }
+        var partISolution = convertFromIntToSNAFU(number: totalValue)
+        
+        let partIOutput = "Part I: " + partISolution
+        print(partIOutput)
+        
+    }
+    
+    func convertFromIntToSNAFU(number: Int) -> String {
+        var output = String()
+        var i = 20
+        var firstPowerFound = false
+        while i >= 0 && !firstPowerFound{
+            if (number / Int(pow(Double(5),Double(i))) > 0) {
+                firstPowerFound = true
+            } else {
+                i -= 1
+            }
+        }
+        var targeting = 0
+        while i >= 0 {
+            let currentValue = Int(pow(Double(5),Double(i)))
+            var closestDistance = Int.max
+            var closestNumber = 0
+            var bestMultiplier = 0
+            for mult in -2...2 {
+                let candidateNumber = targeting + mult * currentValue
+                let distance = abs(candidateNumber - number)
+                if (distance < closestDistance) {
+                    closestNumber = candidateNumber
+                    closestDistance = distance
+                    bestMultiplier = mult
+                }
+            }
+            targeting = closestNumber
+            switch(bestMultiplier) {
+            case -2:
+                output.append("=")
+            case -1:
+                output.append("-")
+            case 0...2:
+                output.append(String(bestMultiplier))
+            default:
+                output.append("")
+            }
+            i -= 1
+        }
+        return output
+    }
+
+    
+    func convertFromSNAFUToInt(string: String) -> Int {
+        let reversed = string.reversed()
+        var output = 0
+        for (i, c) in reversed.enumerated() {
+            var multiplier = 0
+            if c == "-" {
+                multiplier = -1
+            } else if c == "=" {
+                multiplier = -2
+            } else {
+                multiplier = Int(String(c)) ?? 0
+            }
+            output += multiplier * Int(pow(Double(5),Double(i)))
+        }
+        return output
     }
     
     public func run24() {
